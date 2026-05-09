@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 オセロ AI対戦</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <h1>🎮 オセロ AI対戦</h1>
+        <p class="subtitle">ミニマックスアルゴリズムを使用したスマートなAIとの対戦</p>
+
+        <!-- ゲーム情報パネル -->
+        <div class="info-panel">
+            <div class="info-item">
+                <div class="info-label">あなた（黒）</div>
+                <div class="info-value" id="playerScore">2</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">AI（白）</div>
+                <div class="info-value" id="aiScore">2</div>
+            </div>
+            <div class="info-item" id="status">
+                <div class="info-label">ゲーム状態</div>
+                <div class="info-value">準備完了</div>
+            </div>
+            <div class="info-item" id="turnInfo">
+                <div class="info-label">ターン</div>
+                <div class="info-value">準備完了</div>
+            </div>
+        </div>
+
+        <!-- ゲーム盤 -->
+        <div id="board"></div>
+
+        <!-- コントロール -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="difficulty">難易度:</label>
+                <select id="difficulty">
+                    <option value="easy">🟢 Easy</option>
+                    <option value="medium" selected>🟡 Medium</option>
+                    <option value="hard">🔴 Hard</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ボタン -->
+        <div class="controls">
+            <button id="passBtn">パス</button>
+            <button id="resetBtn">新しいゲーム</button>
+        </div>
+
+        <!-- 有効な手の数表示 -->
+        <div class="valid-moves-display">
+            置ける場所: <strong id="validMoves">4</strong> 箇所
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="othello.js"></script>
+    <script src="ai.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
