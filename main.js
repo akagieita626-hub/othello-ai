@@ -1,14 +1,23 @@
 /**
- * ゲームコントローラー
+ * ゲームコントローラー - AI対戦と人間対戦の両対応
  * UI操作とゲームロジックの連携
  */
 
 class GameController {
-    constructor() {
+    constructor(mode = 'ai') {
+        this.gameMode = mode; // 'ai' または 'human'
         this.game = new OthelloGame();
         this.ai = new OthelloAI('medium');
+        
+        // AI対戦モード
         this.playerColor = 2; // 黒
         this.aiColor = 1;      // 白
+        
+        // 人間対戦モード
+        this.player1Color = 2; // 黒
+        this.player2Color = 1; // 白
+        this.currentPlayerColor = 2; // 現在のプレイヤー
+        
         this.isPlayerTurn = true;
         this.isAIThinking = false;
 
@@ -22,14 +31,16 @@ class GameController {
      */
     initElements() {
         this.boardEl = document.getElementById('board');
-        this.playerScoreEl = document.getElementById('playerScore');
-        this.aiScoreEl = document.getElementById('aiScore');
+        this.player1ScoreEl = document.getElementById('player1Score');
+        this.player2ScoreEl = document.getElementById('player2Score');
         this.statusEl = document.getElementById('status');
         this.turnInfoEl = document.getElementById('turnInfo');
         this.passBtn = document.getElementById('passBtn');
         this.resetBtn = document.getElementById('resetBtn');
+        this.modeSelect = document.getElementById('modeSelect');
         this.difficultySelect = document.getElementById('difficulty');
         this.validMovesEl = document.getElementById('validMoves');
+        this.difficultyContainer = document.getElementById('difficultyContainer');
     }
 
     /**
@@ -37,10 +48,30 @@ class GameController {
      */
     setupEventListeners() {
         this.passBtn.addEventListener('click', () => this.pass());
-        this.resetBtn.addEventListener('click', () => this.reset());
-        this.difficultySelect.addEventListener('change', (e) => {
-            this.ai = new OthelloAI(e.target.value);
-        });
+        this.resetBtn.addEventListener('click', () => this.resetGame());
+        
+        if (this.modeSelect) {
+            this.modeSelect.addEventListener('change', (e) => {
+                this.switchMode(e.target.value);
+            });
+        }
+        
+        if (this.difficultySelect) {
+            this.difficultySelect.addEventListener('change', (e) => {
+                this.ai = new OthelloAI(e.target.value);
+            });
+        }
+    }
+
+    /**
+     * ゲームモードを切り替え
+     */
+    switchMode(mode) {
+        this.gameMode = mode;
+        if (this.difficultyContainer) {
+            this.difficultyContainer.style.display = mode === 'ai' ? 'block' : 'none';
+        }
+        this.resetGame();
     }
 
     /**
@@ -63,8 +94,7 @@ class GameController {
                 const cell = document.createElement('button');
                 cell.className = 'cell';
                 cell.id = `cell-${row}-${col}`;
-                cell.disabled = this.isAIThinking;
-
+                
                 const stoneValue = this.game.getCell(row, col);
 
                 // 石を追加
@@ -77,12 +107,14 @@ class GameController {
 
                 // プレイヤーターンの場合、有効な手を表示
                 if (this.isPlayerTurn && !this.isAIThinking) {
-                    if (this.game.isValidMove(row, col, this.playerColor)) {
+                    const colorToCheck = this.gameMode === 'ai' ? this.playerColor : this.currentPlayerColor;
+                    if (this.game.isValidMove(row, col, colorToCheck)) {
                         cell.classList.add('valid-move');
                         cell.addEventListener('click', () => this.playerMove(row, col));
                     }
                 }
 
+                cell.disabled = this.isAIThinking;
                 this.boardEl.appendChild(cell);
             }
         }
@@ -94,12 +126,43 @@ class GameController {
     playerMove(row, col) {
         if (!this.isPlayerTurn || this.isAIThinking) return;
 
-        if (this.game.placeStone(row, col, this.playerColor)) {
-            this.render();
-            this.isPlayerTurn = false;
+        const colorToUse = this.gameMode === 'ai' ? this.playerColor : this.currentPlayerColor;
 
-            // AIのターン
-            setTimeout(() => this.aiMove(), 800);
+        if (this.game.placeStone(row, col, colorToUse)) {
+            this.render();
+
+            if (this.gameMode === 'ai') {
+                // AI対戦モード
+                this.isPlayerTurn = false;
+                setTimeout(() => this.aiMove(), 800);
+            } else {
+                // 人間対戦モード
+                this.currentPlayerColor = this.currentPlayerColor === 1 ? 2 : 1;
+                this.handleNextTurn();
+            }
+        }
+    }
+
+    /**
+     * 次のターンを処理（人間対戦用）
+     */
+    handleNextTurn() {
+        // 現在のプレイヤーが置ける場所があるか確認
+        if (this.game.hasValidMove(this.currentPlayerColor)) {
+            this.isPlayerTurn = true;
+            this.render();
+        } else {
+            // 置ける場所がない場合、相手をチェック
+            const otherColor = this.currentPlayerColor === 1 ? 2 : 1;
+            if (this.game.hasValidMove(otherColor)) {
+                // 相手が置ける場所がある
+                this.currentPlayerColor = otherColor;
+                this.isPlayerTurn = true;
+                this.render();
+            } else {
+                // ゲーム終了
+                this.endGame();
+            }
         }
     }
 
@@ -110,7 +173,6 @@ class GameController {
         this.isAIThinking = true;
         this.updateStatus();
 
-        // AIの思考時間を少し設ける
         setTimeout(() => {
             // AIが置ける場所があるか確認
             if (!this.game.hasValidMove(this.aiColor)) {
@@ -156,28 +218,34 @@ class GameController {
      * パスボタンが押された
      */
     pass() {
-        if (!this.isPlayerTurn) return;
+        if (!this.isPlayerTurn || this.isAIThinking) return;
+
+        const colorToCheck = this.gameMode === 'ai' ? this.playerColor : this.currentPlayerColor;
 
         // プレイヤーが置ける場所があるかチェック
-        if (this.game.hasValidMove(this.playerColor)) {
+        if (this.game.hasValidMove(colorToCheck)) {
             alert('置ける場所があります！');
             return;
         }
 
-        this.isPlayerTurn = false;
-        this.render();
-
-        // AIのターン
-        setTimeout(() => this.aiMove(), 800);
+        if (this.gameMode === 'ai') {
+            this.isPlayerTurn = false;
+            setTimeout(() => this.aiMove(), 800);
+        } else {
+            // 人間対戦モード
+            this.currentPlayerColor = this.currentPlayerColor === 1 ? 2 : 1;
+            this.handleNextTurn();
+        }
     }
 
     /**
      * ゲームをリセット
      */
-    reset() {
+    resetGame() {
         this.game.reset();
         this.isPlayerTurn = true;
         this.isAIThinking = false;
+        this.currentPlayerColor = 2; // 黒から開始
         this.render();
     }
 
@@ -186,11 +254,18 @@ class GameController {
      */
     updateScore() {
         const score = this.game.getScore();
-        this.playerScoreEl.textContent = score.black;
-        this.aiScoreEl.textContent = score.white;
+        
+        if (this.gameMode === 'ai') {
+            this.player1ScoreEl.textContent = score.black;
+            this.player2ScoreEl.textContent = score.white;
+        } else {
+            this.player1ScoreEl.textContent = score.black;
+            this.player2ScoreEl.textContent = score.white;
+        }
 
         // 有効な手の数を表示
-        const validMoves = this.game.getValidMoves(this.playerColor).length;
+        const colorToCheck = this.gameMode === 'ai' ? this.playerColor : this.currentPlayerColor;
+        const validMoves = this.game.getValidMoves(colorToCheck).length;
         this.validMovesEl.textContent = validMoves;
     }
 
@@ -201,25 +276,44 @@ class GameController {
         let status = '';
         let turn = '';
 
-        if (this.isAIThinking) {
-            status = '🤔 AIが考え中...';
-            turn = 'AIのターンです';
-        } else if (this.game.isGameOver()) {
-            const score = this.game.getScore();
-            if (score.black > score.white) {
-                status = '🎉 あなたが勝ちました！';
-            } else if (score.white > score.black) {
-                status = '😔 AIが勝ちました';
+        if (this.gameMode === 'ai') {
+            if (this.isAIThinking) {
+                status = '🤔 AIが考え中...';
+                turn = 'AIのターンです';
+            } else if (this.game.isGameOver()) {
+                const score = this.game.getScore();
+                if (score.black > score.white) {
+                    status = '🎉 あなたが勝ちました！';
+                } else if (score.white > score.black) {
+                    status = '😔 AIが勝ちました';
+                } else {
+                    status = '🤝 同点です';
+                }
+                turn = `最終スコア: あなた ${score.black} vs AI ${score.white}`;
+            } else if (this.isPlayerTurn) {
+                status = 'ゲーム中';
+                turn = '✅ あなた（黒）の番です';
             } else {
-                status = '🤝 同点です';
+                status = 'ゲーム中';
+                turn = 'AIのターンです';
             }
-            turn = `最終スコア: あなた ${score.black} vs AI ${score.white}`;
-        } else if (this.isPlayerTurn) {
-            status = 'ゲーム中';
-            turn = '✅ あなたの番です';
         } else {
-            status = 'ゲーム中';
-            turn = 'AIのターンです';
+            // 人間対戦モード
+            if (this.game.isGameOver()) {
+                const score = this.game.getScore();
+                if (score.black > score.white) {
+                    status = '🎉 プレイヤー1（黒）が勝ちました！';
+                } else if (score.white > score.black) {
+                    status = '🎉 プレイヤー2（白）が勝ちました！';
+                } else {
+                    status = '🤝 同点です';
+                }
+                turn = `最終スコア: 黒 ${score.black} - 白 ${score.white}`;
+            } else if (this.isPlayerTurn) {
+                status = 'ゲーム中';
+                const playerName = this.currentPlayerColor === 2 ? 'プレイヤー1（黒）' : 'プレイヤー2（白）';
+                turn = `✅ ${playerName}の番です`;
+            }
         }
 
         this.statusEl.textContent = status;
@@ -234,19 +328,28 @@ class GameController {
         const score = this.game.getScore();
         let message = '';
 
-        if (score.black > score.white) {
-            message = `🎉 おめでとう！あなたの勝ち！\nスコア: あなた ${score.black} - AI ${score.white}`;
-        } else if (score.white > score.black) {
-            message = `😔 AIが勝ちました\nスコア: あなた ${score.black} - AI ${score.white}`;
+        if (this.gameMode === 'ai') {
+            if (score.black > score.white) {
+                message = `🎉 おめでとう！あなたの勝ち！\nスコア: あなた ${score.black} - AI ${score.white}`;
+            } else if (score.white > score.black) {
+                message = `😔 AIが勝ちました\nスコア: あなた ${score.black} - AI ${score.white}`;
+            } else {
+                message = `🤝 同点です！\nスコア: ${score.black} - ${score.white}`;
+            }
         } else {
-            message = `🤝 同点です！\nスコア: ${score.black} - ${score.white}`;
+            if (score.black > score.white) {
+                message = `🎉 プレイヤー1（黒）が勝ちました！\nスコア: 黒 ${score.black} - 白 ${score.white}`;
+            } else if (score.white > score.black) {
+                message = `🎉 プレイヤー2（白）が勝ちました！\nスコア: 黒 ${score.black} - 白 ${score.white}`;
+            } else {
+                message = `🤝 同点です！\nスコア: ${score.black} - ${score.white}`;
+            }
         }
 
         this.isPlayerTurn = false;
         this.isAIThinking = false;
         this.render();
 
-        // 少し待ってからアラート表示
         setTimeout(() => {
             alert(message);
         }, 500);
@@ -255,5 +358,7 @@ class GameController {
 
 // ゲーム起動
 document.addEventListener('DOMContentLoaded', () => {
-    new GameController();
+    const modeSelect = document.getElementById('modeSelect');
+    const initialMode = modeSelect ? modeSelect.value : 'ai';
+    window.gameController = new GameController(initialMode);
 });
