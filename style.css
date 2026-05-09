@@ -1,0 +1,369 @@
+/* ======================================
+   オセロ AI対戦 - スタイルシート
+   ====================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 700px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 0.95em;
+}
+
+/* ======================================
+   情報パネル
+   ====================================== */
+
+.info-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.info-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.info-label {
+    font-size: 0.85em;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+/* ゲーム状態・ターン情報の特別なスタイル */
+#status .info-value,
+#turnInfo .info-value {
+    font-size: 1.1em;
+    word-break: break-word;
+}
+
+/* ======================================
+   ゲーム盤
+   ====================================== */
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    background: #2d5016;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.cell {
+    aspect-ratio: 1;
+    border: none;
+    background: linear-gradient(135deg, #3a7e44 0%, #2d5016 100%);
+    cursor: pointer;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cell:hover:not(.disabled):not(:disabled) {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #45a050 0%, #3a7e44 100%);
+}
+
+.cell.disabled {
+    cursor: default;
+}
+
+.cell:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 有効な手の表示 */
+.cell.valid-move {
+    position: relative;
+}
+
+.cell.valid-move::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: #ffeb3b;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.8);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+    }
+}
+
+/* ======================================
+   石
+   ====================================== */
+
+.stone {
+    width: 85%;
+    height: 85%;
+    border-radius: 50%;
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.3),
+                inset 2px 2px 5px rgba(255, 255, 255, 0.1);
+    animation: stonePlace 0.3s ease;
+}
+
+.stone.black {
+    background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+}
+
+.stone.white {
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+}
+
+@keyframes stonePlace {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ======================================
+   コントロール
+   ====================================== */
+
+.controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #333;
+}
+
+.control-group select {
+    padding: 8px 15px;
+    border: 2px solid #667eea;
+    border-radius: 5px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.control-group select:hover {
+    border-color: #764ba2;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+}
+
+button {
+    padding: 12px 30px;
+    font-size: 1em;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#passBtn {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+}
+
+#passBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+}
+
+#passBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#resetBtn {
+    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    color: white;
+}
+
+#resetBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(81, 207, 102, 0.3);
+}
+
+/* ======================================
+   有効な手の数表示
+   ====================================== */
+
+.valid-moves-display {
+    text-align: center;
+    color: #666;
+    font-weight: 600;
+    padding: 15px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.valid-moves-display strong {
+    color: #667eea;
+    font-size: 1.2em;
+}
+
+/* ======================================
+   レスポンシブデザイン
+   ====================================== */
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    .subtitle {
+        font-size: 0.85em;
+        margin-bottom: 20px;
+    }
+
+    .info-panel {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .info-item {
+        padding: 10px;
+    }
+
+    .info-label {
+        font-size: 0.75em;
+    }
+
+    .info-value {
+        font-size: 1.5em;
+    }
+
+    #status .info-value,
+    #turnInfo .info-value {
+        font-size: 0.95em;
+    }
+
+    #board {
+        gap: 2px;
+        padding: 8px;
+        margin-bottom: 20px;
+    }
+
+    .controls {
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    .control-group select {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .valid-moves-display {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 400px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .info-panel {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    button,
+    .control-group select {
+        width: 100%;
+    }
+}
