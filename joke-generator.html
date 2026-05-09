@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Random Joke Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 0.95em;
+        }
+
+        .joke-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .joke-type {
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .joke-content {
+            color: #333;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .punchline {
+            color: #764ba2;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #getJokeBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #getJokeBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        #getJokeBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .category-select {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .category-select:hover {
+            border-color: #764ba2;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .joke-container {
+                padding: 20px;
+                min-height: 120px;
+            }
+
+            .joke-content {
+                font-size: 1em;
+            }
+
+            .punchline {
+                font-size: 0.95em;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+
+            .category-select {
+                font-size: 0.85em;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Random Joke Generator</h1>
+        <p class="subtitle">毎回違うジョークが楽しめます！</p>
+
+        <div id="message"></div>
+
+        <div class="stats">
+            <div class="stat-item">
+                総ジョーク数: <span class="stat-value" id="jokeCount">0</span>
+            </div>
+            <div class="stat-item">
+                現在のカテゴリ: <span class="stat-value" id="currentCategory">General</span>
+            </div>
+        </div>
+
+        <div class="joke-container" id="jokeContainer">
+            <div class="loading">
+                <span class="spinner"></span>ジョークを読み込み中...
+            </div>
+        </div>
+
+        <div class="controls">
+            <select class="category-select" id="categorySelect">
+                <option value="">🎲 ランダム</option>
+                <option value="general">👨‍💼 General</option>
+                <option value="programming">💻 Programming</option>
+                <option value="knock-knock">🚪 Knock-Knock</option>
+            </select>
+            <button id="getJokeBtn">新しいジョークを取得</button>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 0.9em;">
+            <p>APIを使用: <strong>JokeAPI</strong></p>
+        </div>
+    </div>
+
+    <script>
+        class JokeGenerator {
+            constructor() {
+                this.jokeCount = 0;
+                this.currentCategory = 'General';
+                this.apiUrl = 'https://v2.jokeapi.dev/joke/';
+                this.init();
+            }
+
+            init() {
+                document.getElementById('getJokeBtn').addEventListener('click', () => this.fetchJoke());
+                document.getElementById('categorySelect').addEventListener('change', (e) => {
+                    this.currentCategory = e.target.value || 'General';
+                    this.fetchJoke();
+                });
+                this.fetchJoke();
+            }
+
+            async fetchJoke() {
+                const btn = document.getElementById('getJokeBtn');
+                const container = document.getElementById('jokeContainer');
+                const messageEl = document.getElementById('message');
+
+                btn.disabled = true;
+                container.innerHTML = '<div class="loading"><span class="spinner"></span>ジョークを読み込み中...</div>';
+                messageEl.innerHTML = '';
+
+                try {
+                    const category = document.getElementById('categorySelect').value || 'Any';
+                    const url = `${this.apiUrl}${category}?lang=ja`;
+
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        throw new Error('APIからの取得に失敗しました');
+                    }
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error('ジョークが見つかりません');
+                    }
+
+                    this.displayJoke(data);
+                    this.jokeCount++;
+                    this.updateStats();
+
+                } catch (error) {
+                    messageEl.innerHTML = `<div class="error-message">❌ エラー: ${error.message}</div>`;
+                    container.innerHTML = '<div style="text-align: center; color: #999;">もう一度お試しください</div>';
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+
+            displayJoke(jokeData) {
+                const container = document.getElementById('jokeContainer');
+                let jokeHTML = `<div class="joke-type">${jokeData.category}</div>`;
+
+                if (jokeData.type === 'single') {
+                    jokeHTML += `<div class="joke-content">${jokeData.joke}</div>`;
+                } else {
+                    jokeHTML += `
+                        <div class="joke-content">${jokeData.setup}</div>
+                        <div class="punchline">${jokeData.delivery}</div>
+                    `;
+                }
+
+                container.innerHTML = jokeHTML;
+            }
+
+            updateStats() {
+                const category = document.getElementById('categorySelect').value || 'ランダム';
+                document.getElementById('jokeCount').textContent = this.jokeCount;
+                document.getElementById('currentCategory').textContent = category;
+            }
+        }
+
+        // アプリケーション起動
+        document.addEventListener('DOMContentLoaded', () => {
+            new JokeGenerator();
+        });
+    </script>
+</body>
+</html>
